@@ -3,6 +3,7 @@ from .berkeley import BerkeleyDataset
 from .coco import CocoDataset
 from .davis import DavisDataset
 from .grabcut import GrabCutDataset
+from .aimmo import AimmoDataset
 from .coco_lvis import CocoLvisDataset
 from .lvis import LvisDataset
 from .openimages import OpenImagesDataset

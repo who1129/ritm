@@ -26,7 +26,7 @@ class ISModel(nn.Module):
         if self.with_prev_mask:
             self.coord_feature_ch += 1
 
-        if use_rgb_conv:
+        if use_rgb_conv: # DMF
             rgb_conv_layers = [
                 nn.Conv2d(in_channels=3 + self.coord_feature_ch, out_channels=6 + self.coord_feature_ch, kernel_size=1),
                 norm_layer(6 + self.coord_feature_ch),
@@ -34,12 +34,12 @@ class ISModel(nn.Module):
                 nn.Conv2d(in_channels=6 + self.coord_feature_ch, out_channels=3, kernel_size=1)
             ]
             self.rgb_conv = nn.Sequential(*rgb_conv_layers)
-        elif conv_extend:
+        elif conv_extend: # Conv1E
             self.rgb_conv = None
             self.maps_transform = nn.Conv2d(in_channels=self.coord_feature_ch, out_channels=64,
                                             kernel_size=3, stride=2, padding=1)
             self.maps_transform.apply(LRMult(0.1))
-        else:
+        else: # Conv1s
             self.rgb_conv = None
             mt_layers = [
                 nn.Conv2d(in_channels=self.coord_feature_ch, out_channels=16, kernel_size=1),

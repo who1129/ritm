@@ -105,6 +105,13 @@ class DSample:
     def gt_mask(self):
         assert len(self._objects) == 1
         return self.get_object_mask(self.objects_ids[0])
+    
+    @property
+    def things_mask(self):
+        return np.squzee(self._encoded_masks)
+    
+    def gt_mask_per_instance(self, inst_id):
+        return self.get_object_mask(self.objects_ids[inst_id])
 
     @property
     def root_objects(self):

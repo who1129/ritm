@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 import numpy as np
 
-from isegm.data.datasets import GrabCutDataset, BerkeleyDataset, DavisDataset, SBDEvaluationDataset, PascalVocDataset
+from isegm.data.datasets import GrabCutDataset, AimmoDataset, BerkeleyDataset, DavisDataset, SBDEvaluationDataset, PascalVocDataset
 from isegm.utils.serialization import load_model
 
 
@@ -48,6 +48,8 @@ def load_single_is_model(state_dict, device, **kwargs):
 def get_dataset(dataset_name, cfg):
     if dataset_name == 'GrabCut':
         dataset = GrabCutDataset(cfg.GRABCUT_PATH)
+    elif dataset_name == 'Aimmo':
+        dataset = AimmoDataset(cfg.AIMMO_PATH, aimmo_cfg=cfg.AIMMO_CFG)
     elif dataset_name == 'Berkeley':
         dataset = BerkeleyDataset(cfg.BERKELEY_PATH)
     elif dataset_name == 'DAVIS':
@@ -74,6 +76,21 @@ def get_iou(gt_mask, pred_mask, ignore_label=-1):
     union = np.logical_and(np.logical_or(pred_mask, obj_gt_mask), ignore_gt_mask_inv).sum()
 
     return intersection / union
+
+def get_RA(gt_mask, pred_mask, ignore_label=-1):
+    '''
+    Custom metric for intuitive retouch area
+    '''
+    ignore_gt_mask_inv = gt_mask != ignore_label
+    obj_gt_mask = gt_mask == 1
+
+    intersection = np.logical_and(np.logical_and(pred_mask, obj_gt_mask), ignore_gt_mask_inv).sum()
+    union = np.logical_and(np.logical_or(pred_mask, obj_gt_mask), ignore_gt_mask_inv).sum()
+    
+    retouch = union - intersection
+    RA = retouch*100/(gt_mask.shape[0]*gt_mask.shape[1])
+    
+    return RA
 
 
 def compute_noc_metric(all_ious, iou_thrs, max_clicks=20):

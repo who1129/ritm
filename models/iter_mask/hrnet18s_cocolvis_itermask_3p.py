@@ -24,7 +24,8 @@ def init_model(cfg):
 
 
 def train(model, cfg, model_cfg):
-    cfg.batch_size = 32 if cfg.batch_size < 1 else cfg.batch_size
+    cfg.batch_size = 16
+    cfg.workers = 8
     cfg.val_batch_size = cfg.batch_size
     crop_size = model_cfg.crop_size
 
@@ -52,7 +53,7 @@ def train(model, cfg, model_cfg):
                                        merge_objects_prob=0.15,
                                        max_num_merged_objects=2)
 
-    trainset = CocoLvisDataset(
+    """trainset = CocoLvisDataset(
         cfg.LVIS_v1_PATH,
         split='train',
         augmentator=train_augmentator,
@@ -61,19 +62,36 @@ def train(model, cfg, model_cfg):
         points_sampler=points_sampler,
         epoch_len=30000,
         stuff_prob=0.30
+    )"""
+    
+    trainset = AimmoDataset(
+        cfg.AIMMO_PATH,
+        aimmo_cfg = cfg.AIMMO_CFG,
+        split='train',
+        augmentator=train_augmentator,
+        points_sampler=points_sampler,
+        epoch_len=8000
     )
 
-    valset = CocoLvisDataset(
+    """valset = CocoLvisDataset(
         cfg.LVIS_v1_PATH,
         split='val',
         augmentator=val_augmentator,
         min_object_area=1000,
         points_sampler=points_sampler,
         epoch_len=2000
+    )"""
+    valset = AimmoDataset(
+        cfg.AIMMO_PATH,
+        aimmo_cfg = cfg.AIMMO_CFG,
+        split='valid',
+        augmentator=val_augmentator,
+        points_sampler=points_sampler,
+        epoch_len=3000
     )
 
     optimizer_params = {
-        'lr': 5e-4, 'betas': (0.9, 0.999), 'eps': 1e-8
+        'lr': 0.001, 'betas': (0.9, 0.999), 'eps': 1e-8
     }
 
     lr_scheduler = partial(torch.optim.lr_scheduler.MultiStepLR,
@@ -83,8 +101,8 @@ def train(model, cfg, model_cfg):
                         optimizer='adam',
                         optimizer_params=optimizer_params,
                         lr_scheduler=lr_scheduler,
-                        checkpoint_interval=[(0, 5), (200, 1)],
-                        image_dump_interval=3000,
+                        checkpoint_interval=[(0, 1), (200, 1)],
+                        image_dump_interval=8000,
                         metrics=[AdaptiveIoU()],
                         max_interactive_points=model_cfg.num_max_points,
                         max_num_next_clicks=3)
