@@ -45,25 +45,8 @@ def load_single_is_model(state_dict, device, **kwargs):
     return model
 
 
-def get_dataset(dataset_name, cfg):
-    if dataset_name == 'GrabCut':
-        dataset = GrabCutDataset(cfg.GRABCUT_PATH)
-    elif dataset_name == 'Aimmo':
-        dataset = AimmoDataset(cfg.AIMMO_PATH, aimmo_cfg=cfg.AIMMO_CFG)
-    elif dataset_name == 'Berkeley':
-        dataset = BerkeleyDataset(cfg.BERKELEY_PATH)
-    elif dataset_name == 'DAVIS':
-        dataset = DavisDataset(cfg.DAVIS_PATH)
-    elif dataset_name == 'SBD':
-        dataset = SBDEvaluationDataset(cfg.SBD_PATH)
-    elif dataset_name == 'SBD_Train':
-        dataset = SBDEvaluationDataset(cfg.SBD_PATH, split='train')
-    elif dataset_name == 'PascalVOC':
-        dataset = PascalVocDataset(cfg.PASCALVOC_PATH, split='test')
-    elif dataset_name == 'COCO_MVal':
-        dataset = DavisDataset(cfg.COCO_MVAL_PATH)
-    else:
-        dataset = None
+def get_dataset(cfg):
+    dataset = AimmoDataset(cfg.AIMMO_PATH, aimmo_cfg=cfg.AIMMO_CFG)
 
     return dataset
 
@@ -136,9 +119,9 @@ def find_checkpoint(weights_folder, checkpoint_name):
     return str(checkpoint_path)
 
 
-def get_results_table(noc_list, over_max_list, brs_type, dataset_name, mean_spc, elapsed_time,
+def get_results_table(noc_list, over_max_list, dataset_name, mean_spc, elapsed_time,
                       n_clicks=20, model_name=None):
-    table_header = (f'|{"BRS Type":^13}|{"Dataset":^11}|'
+    table_header = (f'|{"Dataset":^11}|'
                     f'{"NoC@80%":^9}|{"NoC@85%":^9}|{"NoC@90%":^9}|'
                     f'{">="+str(n_clicks)+"@85%":^9}|{">="+str(n_clicks)+"@90%":^9}|'
                     f'{"SPC,s":^7}|{"Time":^9}|')
@@ -149,7 +132,7 @@ def get_results_table(noc_list, over_max_list, brs_type, dataset_name, mean_spc,
     header += table_header + '\n' + '-' * row_width
 
     eval_time = str(timedelta(seconds=int(elapsed_time)))
-    table_row = f'|{brs_type:^13}|{dataset_name:^11}|'
+    table_row = f'|{dataset_name:^11}|'
     table_row += f'{noc_list[0]:^9.2f}|'
     table_row += f'{noc_list[1]:^9.2f}|' if len(noc_list) > 1 else f'{"?":^9}|'
     table_row += f'{noc_list[2]:^9.2f}|' if len(noc_list) > 2 else f'{"?":^9}|'
