@@ -35,12 +35,11 @@ class BilinearConvTranspose2d(nn.ConvTranspose2d):
 
 
 class DistMaps(nn.Module):
-    def __init__(self, norm_radius, spatial_scale=1.0, cpu_mode=False, use_disks=False):
+    def __init__(self, norm_radius, spatial_scale=1.0, cpu_mode=False):
         super(DistMaps, self).__init__()
         self.spatial_scale = spatial_scale
         self.norm_radius = norm_radius
         self.cpu_mode = cpu_mode
-        self.use_disks = use_disks
         if self.cpu_mode:
             from isegm.utils.cython import get_dist_maps
             self._get_dist_maps = get_dist_maps
@@ -49,7 +48,7 @@ class DistMaps(nn.Module):
         if self.cpu_mode:
             coords = []
             for i in range(batchsize):
-                norm_delimeter = 1.0 if self.use_disks else self.spatial_scale * self.norm_radius
+                norm_delimeter = 1.0
                 coords.append(self._get_dist_maps(points[i].cpu().float().numpy(), rows, cols,
                                                   norm_delimeter))
             coords = torch.from_numpy(np.stack(coords, axis=0)).to(points.device).float()
@@ -67,8 +66,6 @@ class DistMaps(nn.Module):
 
             add_xy = (points * self.spatial_scale).view(points.size(0), points.size(1), 1, 1)
             coords.add_(-add_xy)
-            if not self.use_disks:
-                coords.div_(self.norm_radius * self.spatial_scale)
             coords.mul_(coords)
 
             coords[:, 0] += coords[:, 1]
@@ -80,11 +77,8 @@ class DistMaps(nn.Module):
             coords = coords.min(dim=1)[0]  # -> (bs * num_masks * 2) x 1 x h x w
             coords = coords.view(-1, 2, rows, cols)
 
-        if self.use_disks:
-            coords = (coords <= (self.norm_radius * self.spatial_scale) ** 2).float()
-        else:
-            coords.sqrt_().mul_(2).tanh_()
-
+        coords = (coords <= (self.norm_radius * self.spatial_scale) ** 2).float()
+       
         return coords
 
     def forward(self, x, coords):

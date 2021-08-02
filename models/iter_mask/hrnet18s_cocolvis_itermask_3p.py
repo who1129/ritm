@@ -12,9 +12,7 @@ def init_model(cfg):
     model_cfg.crop_size = (320, 480)
     model_cfg.num_max_points = 24
 
-    model = HRNetModel(width=18, ocr_width=48, small=True, with_aux_output=True, use_leaky_relu=True,
-                       use_rgb_conv=False, use_disks=True, norm_radius=5,
-                       with_prev_mask=True)
+    model = HRNetModel(width=18, ocr_width=48, small=True, with_aux_output=True, use_leaky_relu=True, norm_radius=5)
 
     model.to(cfg.device)
     model.apply(initializer.XavierGluon(rnd_type='gaussian', magnitude=2.0))
@@ -53,17 +51,6 @@ def train(model, cfg, model_cfg):
                                        merge_objects_prob=0.15,
                                        max_num_merged_objects=2)
 
-    """trainset = CocoLvisDataset(
-        cfg.LVIS_v1_PATH,
-        split='train',
-        augmentator=train_augmentator,
-        min_object_area=1000,
-        keep_background_prob=0.05,
-        points_sampler=points_sampler,
-        epoch_len=30000,
-        stuff_prob=0.30
-    )"""
-    
     trainset = AimmoDataset(
         cfg.AIMMO_PATH,
         aimmo_cfg = cfg.AIMMO_CFG,
@@ -73,14 +60,6 @@ def train(model, cfg, model_cfg):
         epoch_len=8000
     )
 
-    """valset = CocoLvisDataset(
-        cfg.LVIS_v1_PATH,
-        split='val',
-        augmentator=val_augmentator,
-        min_object_area=1000,
-        points_sampler=points_sampler,
-        epoch_len=2000
-    )"""
     valset = AimmoDataset(
         cfg.AIMMO_PATH,
         aimmo_cfg = cfg.AIMMO_CFG,
@@ -101,7 +80,7 @@ def train(model, cfg, model_cfg):
                         optimizer='adam',
                         optimizer_params=optimizer_params,
                         lr_scheduler=lr_scheduler,
-                        checkpoint_interval=[(0, 1), (200, 1)],
+                        checkpoint_interval=[(0, 5), (200, 1)],
                         image_dump_interval=8000,
                         metrics=[AdaptiveIoU()],
                         max_interactive_points=model_cfg.num_max_points,

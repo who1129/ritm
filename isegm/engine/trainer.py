@@ -266,7 +266,7 @@ class ISTrainer(object):
                     else:
                         eval_model = self.click_models[click_indx]
 
-                    net_input = torch.cat((image, prev_output), dim=1) if self.net.with_prev_mask else image
+                    net_input = torch.cat((image, prev_output), dim=1)
                     prev_output = torch.sigmoid(eval_model(net_input, points)['instances'])
 
                     points = get_next_points(prev_output, orig_gt_mask, points, click_indx + 1)
@@ -274,13 +274,13 @@ class ISTrainer(object):
                     if not validation:
                         self.net.train()
 
-                if self.net.with_prev_mask and self.prev_mask_drop_prob > 0 and last_click_indx is not None:
+                if self.prev_mask_drop_prob > 0 and last_click_indx is not None:
                     zero_mask = np.random.random(size=prev_output.size(0)) < self.prev_mask_drop_prob
                     prev_output[zero_mask] = torch.zeros_like(prev_output[zero_mask])
 
             batch_data['points'] = points
 
-            net_input = torch.cat((image, prev_output), dim=1) if self.net.with_prev_mask else image
+            net_input = torch.cat((image, prev_output), dim=1)
             output = self.net(net_input, points)
 
             loss = 0.0

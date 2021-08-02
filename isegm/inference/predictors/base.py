@@ -56,8 +56,7 @@ class BasePredictor(object):
         input_image = self.original_image
         if prev_mask is None:
             prev_mask = self.prev_prediction
-        if hasattr(self.net, 'with_prev_mask') and self.net.with_prev_mask:
-            input_image = torch.cat((input_image, prev_mask), dim=1)
+        input_image = torch.cat((input_image, prev_mask), dim=1)
         image_nd, clicks_lists, is_image_changed = self.apply_transforms(
             input_image, [clicks_list]
         )
