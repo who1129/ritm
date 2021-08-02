@@ -31,8 +31,7 @@ class AimmoDataset(ISDataset):
 
         self._ann_datas = list()
         for path in glob.glob(self._labels_path+"/**/*.json", recursive=True):
-            with open(path) as json_file:
-                annotations = json.load(json_file)
+            annotations = json.load(open(path))
                 ## TODO: remove
                 """sample_path = annotations['parent_path']+"/"+annotations['filename']
 
