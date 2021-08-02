@@ -15,22 +15,24 @@ except NameError:
 
 def evaluate_dataset(dataset, predictor, **kwargs):
     all_ious = []
+    all_ras = []
 
     start_time = time()
     for index in tqdm(range(len(dataset)), leave=False):
         sample = dataset.get_sample(index)
         for inst_id in range(len(sample)):
-            _, sample_ious, _ = evaluate_sample(sample.image,
+            _, sample_ious, sample_ras, _ = evaluate_sample(sample.image,
                                                 sample.gt_mask_per_instance(inst_id),
                                                 predictor, sample_id=index, **kwargs)
         all_ious.append(sample_ious)
+        all_ras.append(sample_ras)
     end_time = time()
     elapsed_time = end_time - start_time
 
-    return all_ious, elapsed_time
+    return all_ious, all_ras, elapsed_time
 
 
-def evaluate_sample(image, gt_mask, predictor, max_iou_thr, max_ra_thr,
+def evaluate_sample(image, gt_mask, predictor, max_iou_thr=0.9, max_ra_thr=0.05,
                     pred_thr=0.49, min_clicks=1, max_clicks=20,
                     sample_id=None, callback=None):
     clicker = Clicker(gt_mask=gt_mask)

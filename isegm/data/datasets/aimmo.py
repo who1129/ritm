@@ -28,17 +28,17 @@ class AimmoDataset(ISDataset):
         '/Disk5/Front/20200611_104618_Front_000900.png',
         '/Disk5/Left/20200618_094543_Left_003480.png',
         '/Disk4/Right/20200623_144835_Right_000120.png']
-
+        # annotation
         self._ann_datas = list()
         for path in glob.glob(self._labels_path+"/**/*.json", recursive=True):
             annotations = json.load(open(path))
-                ## TODO: remove
-                """sample_path = annotations['parent_path']+"/"+annotations['filename']
+            ## TODO: remove
+            sample_path = annotations['parent_path']+"/"+annotations['filename']
 
-                if sample_path not in sample_idx:
-                    continue"""
+            if sample_path not in sample_idx:
+                continue
             self._ann_datas.append(annotations)
-
+        # img
         self.dataset_samples = list()
         path_list = glob.glob(self._images_path+"/**/*.*", recursive=True)
         img_extends = ['jpg', 'jpeg', 'JPG', 'bmp', 'png']
@@ -47,12 +47,12 @@ class AimmoDataset(ISDataset):
                 json_path = Path(path.replace(images_dir_name, masks_dir_name))
                 json_path = json_path.with_suffix('.json')
                 if os.path.isfile(json_path):
+                    if path.replace(self.dataset_path+"/images", "") not in sample_idx:
+                        continue
                     self.dataset_samples.append(path)
                 else:
-                    continue
-                    #raise FileNotFoundError("No annotation file at image: "+path)
-        print("num of dataset: ", len(self._ann_datas))
-
+                    raise FileNotFoundError("No annotation file at image: "+path)
+        
     def make_mask(self, anns, img_size):
         background = np.zeros((img_size[0], img_size[1], 1))
         mask_color = 0
