@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 import numpy as np
 
-from isegm.data.datasets import GrabCutDataset, AimmoDataset, BerkeleyDataset, DavisDataset, SBDEvaluationDataset, PascalVocDataset
+from isegm.data.datasets import AimmoDataset
 from isegm.utils.serialization import load_model
 
 

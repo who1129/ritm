@@ -1,19 +1,6 @@
 INTERACTIVE_MODELS_PATH: "./weights"
 EXPS_PATH: "./experiments"
-
-# Evaluation datasets
-GRABCUT_PATH: "./datasets/GrabCut"
-BERKELEY_PATH: "./datasets/Berkeley"
-DAVIS_PATH: "./datasets/DAVIS"
-COCO_MVAL_PATH: "./datasets/COCO_MVal"
-
-# Train datasets
-SBD_PATH: "./datasets/SBD"
-COCO_PATH: "./datasets/coco2017"
-LVIS_PATH: "./datasets/LVIS"
-OPENIMAGES_PATH: "./datasets/OpenImages"
-PASCALVOC_PATH: "./datasets/PascalVOC"
-ADE20K_PATH: "./datasets/ADE20K"
+# datasets
 AIMMO_PATH: "./data/HD"
 AIMMO_CFG:
   CLASS_LIST: ['Background',
