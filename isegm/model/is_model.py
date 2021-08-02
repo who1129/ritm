@@ -8,14 +8,12 @@ from isegm.model.modifiers import LRMult
 
 class ISModel(nn.Module):
     def __init__(self, with_aux_output=False, norm_radius=260, cpu_dist_maps=False, use_leaky_relu=False,
-                 binary_prev_mask=False, norm_layer=nn.BatchNorm2d, norm_mean_std=([.485, .456, .406], [.229, .224, .225])):
+                norm_layer=nn.BatchNorm2d, norm_mean_std=([.485, .456, .406], [.229, .224, .225])):
         super().__init__()
         self.with_aux_output = with_aux_output
-        self.binary_prev_mask = binary_prev_mask
         self.normalization = BatchImageNormalize(norm_mean_std[0], norm_mean_std[1])
         self.coord_feature_ch = 3
         # Conv1s module
-        self.rgb_conv = None
         mt_layers = [
             nn.Conv2d(in_channels=self.coord_feature_ch, out_channels=16, kernel_size=1),
             nn.LeakyReLU(negative_slope=0.2) if use_leaky_relu else nn.ReLU(inplace=True),
@@ -30,12 +28,8 @@ class ISModel(nn.Module):
         image, prev_mask = self.prepare_input(image)
         coord_features = self.get_coord_features(image, prev_mask, points)
 
-        if self.rgb_conv is not None:
-            x = self.rgb_conv(torch.cat((image, coord_features), dim=1))
-            outputs = self.backbone_forward(x)
-        else:
-            coord_features = self.maps_transform(coord_features)
-            outputs = self.backbone_forward(image, coord_features)
+        coord_features = self.maps_transform(coord_features)
+        outputs = self.backbone_forward(image, coord_features)
 
         outputs['instances'] = nn.functional.interpolate(outputs['instances'], size=image.size()[2:],
                                                          mode='bilinear', align_corners=True)
@@ -48,9 +42,7 @@ class ISModel(nn.Module):
     def prepare_input(self, image):
         prev_mask = image[:, 3:, :, :]
         image = image[:, :3, :, :]
-        if self.binary_prev_mask:
-            prev_mask = (prev_mask > 0.5).float()
-
+        
         image = self.normalization(image)
         return image, prev_mask
 

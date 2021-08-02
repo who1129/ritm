@@ -32,11 +32,13 @@ class AimmoDataset(ISDataset):
         self._ann_datas = list()
         for path in glob.glob(self._labels_path+"/**/*.json", recursive=True):
             annotations = json.load(open(path))
+            if len(annotations['annotations']) == 0:
+                continue
             ## TODO: remove
             sample_path = annotations['parent_path']+"/"+annotations['filename']
 
-            if sample_path not in sample_idx:
-                continue
+            """if sample_path not in sample_idx:
+                continue"""
             self._ann_datas.append(annotations)
         # img
         self.dataset_samples = list()
@@ -47,11 +49,17 @@ class AimmoDataset(ISDataset):
                 json_path = Path(path.replace(images_dir_name, masks_dir_name))
                 json_path = json_path.with_suffix('.json')
                 if os.path.isfile(json_path):
-                    if path.replace(self.dataset_path+"/images", "") not in sample_idx:
-                        continue
+                    """if path.replace(self.dataset_path+"/images", "") not in sample_idx:
+                        continue"""
                     self.dataset_samples.append(path)
                 else:
-                    raise FileNotFoundError("No annotation file at image: "+path)
+                    pass
+                    #raise FileNotFoundError("No annotation file at image: " + path)
+        
+        if len(self._ann_datas) == 0:
+            raise ValueError("Empty Annotation Dataset: ", self._labels_path)
+        if len(self.dataset_samples) == 0:
+            raise ValueError("Empty Image Dataset: ", self._images_path)
         
     def make_mask(self, anns, img_size):
         background = np.zeros((img_size[0], img_size[1], 1))
@@ -81,7 +89,7 @@ class AimmoDataset(ISDataset):
         instances_mask = self.make_mask(annotations['annotations'], image.shape)
         instances_ids = np.unique(instances_mask).astype('int32').tolist()
         instances_ids.remove(0)
-        if len(instances_ids) ==0:
-            err_msg = 'No Instanse on image'+self._ann_datas[index]['parent_path'] +"/"+self._ann_datas[index]['filename']
+        if len(instances_ids) == 0:
+            err_msg = 'No Instanse on image'+self._ann_datas[index]['parent_path'] + "/" + self._ann_datas[index]['filename']
             raise ValueError(err_msg)
         return DSample(image, instances_mask, objects_ids=instances_ids)

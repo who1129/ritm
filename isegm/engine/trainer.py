@@ -91,8 +91,9 @@ class ISTrainer(object):
                                                     output_device=cfg.gpu_ids[0])
 
         if self.is_master:
-            logger.info(model)
-            logger.info(get_config_repr(model._config))
+            #logger.info(model)
+            #logger.info(get_config_repr(model._config))
+            pass
 
         self.device = cfg.device
         self.net = model.to(self.device)
