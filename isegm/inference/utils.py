@@ -18,7 +18,7 @@ def get_time_metrics(all_ious, elapsed_time):
     return mean_spc, mean_spi
 
 
-def load_is_model(checkpoint, device, **kwargs):
+def load_is_model(checkpoint, device, is_api=False, **kwargs):
     if isinstance(checkpoint, (str, Path)):
         state_dict = torch.load(checkpoint, map_location='cpu')
     else:
@@ -30,7 +30,10 @@ def load_is_model(checkpoint, device, **kwargs):
 
         return model, models
     else:
-        return load_single_is_model(state_dict, device, **kwargs)
+        if is_api:
+            return load_single_is_model(state_dict, device, **kwargs), state_dict['config']['adaptied_score']
+        else:
+            return load_single_is_model(state_dict, device, **kwargs)
 
 
 def load_single_is_model(state_dict, device, **kwargs):

@@ -1,21 +1,16 @@
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
-from isegm.inference.transforms import AddHorizontalFlip, SigmoidForPred, LimitLongestSide
 
 
 class BasePredictor(object):
     def __init__(self, model, device,
                  net_clicks_limit=None,
-                 with_flip=False,
-                 zoom_in=None,
                  max_size=None,
                  **kwargs):
-        self.with_flip = with_flip
         self.net_clicks_limit = net_clicks_limit
         self.original_image = None
         self.device = device
-        self.zoom_in = zoom_in
         self.prev_prediction = None
         self.model_indx = 0
         self.click_models = None
@@ -28,23 +23,14 @@ class BasePredictor(object):
 
         self.to_tensor = transforms.ToTensor()
 
-        self.transforms = [zoom_in] if zoom_in is not None else []
-        if max_size is not None:
-            self.transforms.append(LimitLongestSide(max_size=max_size))
-        self.transforms.append(SigmoidForPred())
-        if with_flip:
-            self.transforms.append(AddHorizontalFlip())
-
     def set_input_image(self, image):
         image_nd = self.to_tensor(image)
-        for transform in self.transforms:
-            transform.reset()
         self.original_image = image_nd.to(self.device)
         if len(self.original_image.shape) == 3:
             self.original_image = self.original_image.unsqueeze(0)
         self.prev_prediction = torch.zeros_like(self.original_image[:, :1, :, :])
 
-    def get_prediction(self, clicker, prev_mask=None):
+    def get_prediction(self, clicker, init_mask=None):
         clicks_list = clicker.get_clicks()
 
         if self.click_models is not None:
@@ -54,47 +40,25 @@ class BasePredictor(object):
                 self.net = self.click_models[model_indx]
 
         input_image = self.original_image
-        if prev_mask is None:
+        if init_mask is None:
             prev_mask = self.prev_prediction
+        else:
+            prev_mask = torch.tensor(init_mask).unsqueeze(0).unsqueeze(0)
         input_image = torch.cat((input_image, prev_mask), dim=1)
-        image_nd, clicks_lists, is_image_changed = self.apply_transforms(
-            input_image, [clicks_list]
-        )
+        clicks_lists = [clicks_list]
 
-        pred_logits = self._get_prediction(image_nd, clicks_lists, is_image_changed)
+        pred_logits = self._get_prediction(input_image, clicks_lists)
         prediction = F.interpolate(pred_logits, mode='bilinear', align_corners=True,
-                                   size=image_nd.size()[2:])
-
-        for t in reversed(self.transforms):
-            prediction = t.inv_transform(prediction)
-
-        if self.zoom_in is not None and self.zoom_in.check_possible_recalculation():
-            return self.get_prediction(clicker)
+                                   size=input_image.size()[2:])
 
         self.prev_prediction = prediction
         return prediction.cpu().numpy()[0, 0]
 
-    def _get_prediction(self, image_nd, clicks_lists, is_image_changed):
-        points_nd = self.get_points_nd(clicks_lists)
-        return self.net(image_nd, points_nd)['instances']
+    def _get_prediction(self, input_image, clicks_lists):
+        points_nd = self._get_points_nd(clicks_lists)
+        return self.net(input_image, points_nd)['instances']
 
-    def _get_transform_states(self):
-        return [x.get_state() for x in self.transforms]
-
-    def _set_transform_states(self, states):
-        assert len(states) == len(self.transforms)
-        for state, transform in zip(states, self.transforms):
-            transform.set_state(state)
-
-    def apply_transforms(self, image_nd, clicks_lists):
-        is_image_changed = False
-        for t in self.transforms:
-            image_nd, clicks_lists = t.transform(image_nd, clicks_lists)
-            is_image_changed |= t.image_changed
-
-        return image_nd, clicks_lists, is_image_changed
-
-    def get_points_nd(self, clicks_lists):
+    def _get_points_nd(self, clicks_lists):
         total_clicks = []
         num_pos_clicks = [sum(x.is_positive for x in clicks_list) for clicks_list in clicks_lists]
         num_neg_clicks = [len(clicks_list) - num_pos for clicks_list, num_pos in zip(clicks_lists, num_pos_clicks)]
@@ -115,11 +79,10 @@ class BasePredictor(object):
         return torch.tensor(total_clicks, device=self.device)
 
     def get_states(self):
-        return {
-            'transform_states': self._get_transform_states(),
-            'prev_prediction': self.prev_prediction.clone()
-        }
+        return self.prev_prediction
 
     def set_states(self, states):
-        self._set_transform_states(states['transform_states'])
-        self.prev_prediction = states['prev_prediction']
+        self.prev_prediction = states
+    
+    def reset_states(self):
+        self.prev_prediction = torch.zeros_like(self.original_image[:, :1, :, :])

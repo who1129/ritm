@@ -29,33 +29,29 @@ class AimmoDataset(ISDataset):
         '/Disk5/Left/20200618_094543_Left_003480.png',
         '/Disk4/Right/20200623_144835_Right_000120.png']
         # annotation
+        img_path_list = list()
         self._ann_datas = list()
-        for path in glob.glob(self._labels_path+"/**/*.json", recursive=True):
+        for path in glob.glob(self._labels_path+"/**/*.json", recursive=True)[:30]:
             annotations = json.load(open(path))
             if len(annotations['annotations']) == 0:
                 continue
-            ## TODO: remove
-            sample_path = annotations['parent_path']+"/"+annotations['filename']
+            img_path_list.append(annotations['parent_path']+"/"+annotations['filename'])
 
             """if sample_path not in sample_idx:
                 continue"""
             self._ann_datas.append(annotations)
         # img
         self.dataset_samples = list()
-        path_list = glob.glob(self._images_path+"/**/*.*", recursive=True)
+        img_path_list = [os.path.join(self._images_path, p) for p in img_path_list]
         img_extends = ['jpg', 'jpeg', 'JPG', 'bmp', 'png']
-        for path in path_list:
+        for path in img_path_list:
             if path.split(".")[-1] in img_extends:
                 json_path = Path(path.replace(images_dir_name, masks_dir_name))
                 json_path = json_path.with_suffix('.json')
-                if os.path.isfile(json_path):
-                    """if path.replace(self.dataset_path+"/images", "") not in sample_idx:
-                        continue"""
-                    self.dataset_samples.append(path)
-                else:
-                    pass
-                    #raise FileNotFoundError("No annotation file at image: " + path)
-        
+                """if path.replace(self.dataset_path+"/images", "") not in sample_idx:
+                continue"""
+                self.dataset_samples.append(path)
+                
         if len(self._ann_datas) == 0:
             raise ValueError("Empty Annotation Dataset: ", self._labels_path)
         if len(self.dataset_samples) == 0:

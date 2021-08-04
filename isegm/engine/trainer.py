@@ -180,6 +180,7 @@ class ISTrainer(object):
 
         if self.is_master:
             for metric in self.train_metrics:
+                self.net._config['adaptied_score'] = metric._ema_iou
                 self.sw.add_scalar(tag=f'{log_prefix}Metrics/{metric.name}',
                                    value=metric.get_epoch_value(),
                                    global_step=epoch, disable_avg=True)
