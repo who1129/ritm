@@ -11,14 +11,14 @@ from isegm.data.sample import DSample
 
 
 class AimmoDataset(ISDataset):
-    def __init__(self, dataset_path, aimmo_cfg=None, split='valid',
+    def __init__(self, cfg, split='valid',
                  images_dir_name='images', masks_dir_name='labels', ann_type='poly_points',
                  **kwargs):
         super(AimmoDataset, self).__init__(**kwargs)
 
-        self.class_map = {label:idx for idx, label in enumerate(aimmo_cfg.CLASS_LIST)}
-        self.ignore_class = aimmo_cfg.IGNORE_CLASS
-        self.dataset_path = os.path.join(dataset_path, split)
+        self.class_map = {label:idx for idx, label in enumerate(cfg.CLASS_LIST)}
+        self.ignore_class = cfg.IGNORE_CLASS
+        self.dataset_path = os.path.join(cfg.DATASET_PATH, split)
         self._images_path = os.path.join(self.dataset_path, images_dir_name)
         self._labels_path = os.path.join(self.dataset_path, masks_dir_name)
         ## TODO: remove
@@ -31,7 +31,7 @@ class AimmoDataset(ISDataset):
         # annotation
         img_path_list = list()
         self._ann_datas = list()
-        for path in glob.glob(self._labels_path+"/**/*.json", recursive=True)[:30]:
+        for path in glob.glob(self._labels_path+"/**/*.json", recursive=True):
             annotations = json.load(open(path))
             if len(annotations['annotations']) == 0:
                 continue
@@ -56,7 +56,7 @@ class AimmoDataset(ISDataset):
             raise ValueError("Empty Annotation Dataset: ", self._labels_path)
         if len(self.dataset_samples) == 0:
             raise ValueError("Empty Image Dataset: ", self._images_path)
-        
+
     def make_mask(self, anns, img_size):
         background = np.zeros((img_size[0], img_size[1], 1))
         mask_color = 0

@@ -16,7 +16,7 @@ def init_model(cfg):
 
     model.to(cfg.device)
     model.apply(initializer.XavierGluon(rnd_type='gaussian', magnitude=2.0))
-    model.feature_extractor.load_pretrained_weights(cfg.IMAGENET_PRETRAINED_MODELS.HRNETV2_W18_SMALL)
+    model.feature_extractor.load_pretrained_weights(cfg.IMAGENET_PRETRAINED_MODELS)
 
     return model, model_cfg
 
@@ -52,21 +52,17 @@ def train(model, cfg, model_cfg):
                                        max_num_merged_objects=2)
 
     trainset = AimmoDataset(
-        cfg.AIMMO_PATH,
-        aimmo_cfg = cfg.AIMMO_CFG,
+        cfg,
         split='train',
         augmentator=train_augmentator,
-        points_sampler=points_sampler,
-        epoch_len=8000
+        points_sampler=points_sampler
     )
 
     valset = AimmoDataset(
-        cfg.AIMMO_PATH,
-        aimmo_cfg = cfg.AIMMO_CFG,
+        cfg,
         split='valid',
         augmentator=val_augmentator,
-        points_sampler=points_sampler,
-        epoch_len=3000
+        points_sampler=points_sampler
     )
 
     optimizer_params = {
@@ -81,7 +77,7 @@ def train(model, cfg, model_cfg):
                         optimizer_params=optimizer_params,
                         lr_scheduler=lr_scheduler,
                         checkpoint_interval=[(0, 5), (200, 1)],
-                        image_dump_interval=8000,
+                        image_dump_interval=int(len(valset)/2),
                         metrics=[AdaptiveIoU()],
                         max_interactive_points=model_cfg.num_max_points,
                         max_num_next_clicks=3)

@@ -49,8 +49,8 @@ def load_single_is_model(state_dict, device, **kwargs):
 
 
 def get_dataset(cfg):
-    dataset = AimmoDataset(cfg.AIMMO_PATH, aimmo_cfg=cfg.AIMMO_CFG)
-
+    dataset = AimmoDataset(cfg)
+    
     return dataset
 
 
