@@ -1,6 +1,8 @@
 # Interactive Segmentation
+Working with segmentation while interacting with deep learning models. It reduces the amount of manual work for the operator.
+
 ## Preview
-<img src='./misc/interactive_seg_demo.gif>
+<img src="./misc/interactive_seg_demo.gif"/>
 
 ## Setting up an environment
 - dockerfile build
