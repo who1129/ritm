@@ -6,10 +6,10 @@ Working with segmentation while interacting with deep learning models. It reduce
 
 ## Setting up an environment
 - dockerfile build
--  `cd ritm_interactive_segmentation`
--  ` docker build --no-cache=false -t {img_name}:{tag} .`
+	-  `cd ritm_interactive_segmentation`
+	-  ` docker build --no-cache=false -t {img_name}:{tag} .`
 - run container
--  `docker run -it -d -p {gpu_server_port}:{container_jupyterlab_port} --gpus all --ipc=host --shm-size=8g -v /home:/home {img_name}:{tag}`
+	-  `docker run -it -d -p {gpu_server_port}:{container_jupyterlab_port} --gpus all --ipc=host --shm-size=8g -v /home:/home {img_name}:{tag}`
 
 ## Custom model training
 - setting dataset directory
@@ -24,11 +24,11 @@ data
 └── labels
 ```
 - config.yaml
-- EXPS_PATH: Where pipeline outputs will saved. (tensorboard log, ckpts, vis, ...)
-- DATASET_PATH: Dataset root path.
-- CLASS_LIST: All of class name.
-- IGNORE_CLASS: This class is excluded from training because it affects bad influence during training. The classes have ambiguous shape.(contain many object or shape)
-- IMAGENET_PRETRAINED_MODELS: Prae-trained model path
+	- EXPS_PATH: Where pipeline outputs will saved. (tensorboard log, ckpts, vis, ...)
+	- DATASET_PATH: Dataset root path.
+	- CLASS_LIST: All of class name.
+	- IGNORE_CLASS: This class is excluded from training because it affects bad influence during training. The classes have ambiguous shape.(contain many object or shape)
+	- IMAGENET_PRETRAINED_MODELS: Prae-trained model path
 ```
 EXPS_PATH: "./experiments"
 DATASET_PATH: "./data/HD"
